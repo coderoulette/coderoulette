@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.next/
+
+# Environment files
+.env
+.env.local
+apps/server/.env
+apps/web/.env.local
+
+# Claude sessions (local state)
+.claude/sessions/
+.claude/settings.local.json

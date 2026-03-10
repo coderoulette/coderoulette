@@ -1,0 +1,25 @@
+{
+  "name": "clauderoulette-host",
+  "version": "0.1.0",
+  "description": "ClaudeRoulette host agent — streams your Claude Code session to a partner",
+  "type": "module",
+  "bin": {
+    "clauderoulette-host": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/cli.ts",
+    "build": "tsc",
+    "start": "node dist/cli.js"
+  },
+  "dependencies": {
+    "@clauderoulette/shared": "*",
+    "commander": "^13.0.0",
+    "node-pty": "^1.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

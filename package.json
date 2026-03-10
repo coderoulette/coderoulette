@@ -1,0 +1,21 @@
+{
+  "name": "clauderoulette",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:server": "npm run dev --workspace=apps/server",
+    "dev:agent": "npm run dev --workspace=packages/host-agent",
+    "demo:agent": "npx tsx packages/host-agent/src/cli.ts",
+    "build": "npm run build --workspaces",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
+    "demo": "concurrently -n server,web,agent -c blue,green,yellow \"npx tsx apps/server/src/index.ts\" \"cd apps/web && npx next dev -p 3000\" \"sleep 3 && npx tsx packages/host-agent/src/cli.ts\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.7.0"
+  }
+}
