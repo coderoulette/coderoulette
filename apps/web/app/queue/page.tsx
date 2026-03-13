@@ -362,26 +362,15 @@ export default function QueuePage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      send({ type: "leave_queue" });
-                      send({ type: "solo_session" });
-                    }}
-                    className="px-6 py-2 text-sm text-brand-400 hover:text-brand-300 border border-brand-400/30 hover:border-brand-400/50 rounded-lg transition-colors"
-                  >
-                    Go solo with Claude
-                  </button>
-                  <button
-                    onClick={() => {
-                      send({ type: "leave_queue" });
-                      router.push("/");
-                    }}
-                    className="px-6 py-2 text-sm text-gray-400 hover:text-gray-200 border border-white/10 hover:border-white/20 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
+                <button
+                  onClick={() => {
+                    send({ type: "leave_queue" });
+                    router.push("/");
+                  }}
+                  className="px-6 py-2 text-sm text-gray-400 hover:text-gray-200 border border-white/10 hover:border-white/20 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
             )}
           </div>
