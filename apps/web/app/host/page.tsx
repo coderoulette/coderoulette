@@ -157,7 +157,7 @@ export default function HostPage() {
             <ul className="text-sm text-zinc-300 space-y-1.5">
               <li>Claude Code runs in an isolated temp directory on your machine (not your home folder)</li>
               <li>Your partner sees the same terminal output in their browser in real-time</li>
-              <li>Either of you can type prompts — you take turns driving Claude</li>
+              <li>One person drives at a time, but you can swap roles whenever you want</li>
               <li>As the host, you always have the final say — when your partner suggests a prompt, you see it in the UI and choose to run or dismiss it before anything is sent to Claude</li>
               <li>Sessions last 30 minutes with an optional 15-minute extension</li>
             </ul>
