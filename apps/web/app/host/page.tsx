@@ -9,7 +9,8 @@ export default function HostPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnTo = searchParams.get("return") || "/queue";
+  const returnPath = searchParams.get("return") || "/queue";
+  const returnTo = returnPath + (returnPath.includes("?") ? "&host=1" : "?host=1");
   const [token, setToken] = useState<string | null>(null);
   const [copiedCommand, setCopiedCommand] = useState(false);
   const [copiedToken, setCopiedToken] = useState(false);
@@ -149,7 +150,7 @@ export default function HostPage() {
               onClick={() => router.push(returnTo)}
               className="px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl text-lg transition-colors"
             >
-              {returnTo.startsWith("/invite") ? "Join session as host" : "Find a partner"}
+              {returnPath.startsWith("/invite") ? "Join session as host" : "Find a partner"}
             </button>
           </div>
 

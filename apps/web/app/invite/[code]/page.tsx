@@ -98,7 +98,7 @@ export default function InvitePage() {
 
             <div className="grid grid-cols-1 gap-4">
               <button
-                onClick={() => router.push(`/host?return=${encodeURIComponent(`/invite/${inviteCode}?host=1`)}`)}
+                onClick={() => router.push(`/host?return=/invite/${inviteCode}`)}
                 className="p-5 rounded-xl bg-surface-raised border border-white/5 hover:border-brand-400/40 transition-all text-left group"
               >
                 <div className="flex items-start gap-4">
