@@ -290,7 +290,7 @@ export default function QueuePage() {
 
             <div className="grid grid-cols-1 gap-4">
               <button
-                onClick={() => router.push("/host?return=/queue%3Fhost%3D1")}
+                onClick={() => router.push(`/host?return=${encodeURIComponent("/queue?host=1")}`)}
                 className="p-5 rounded-xl bg-surface-raised border border-white/5 hover:border-brand-400/40 transition-all text-left group"
               >
                 <div className="flex items-start gap-4">
