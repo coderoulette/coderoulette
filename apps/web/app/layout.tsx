@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   title: "CodeRoulette — Build something with a stranger",
   description:
     "Get randomly matched with another developer for a 30-minute AI-powered coding jam session.",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
