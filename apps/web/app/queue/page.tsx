@@ -450,18 +450,15 @@ function QueuePageInner() {
             </div>
           </div>
           <div className="w-[1px] h-5 bg-white/[0.06]" />
-          {partner && (
+          {user && (
             <div className="flex items-center gap-2.5">
               <div className="relative">
-                {partner.avatarUrl && (
-                  <img src={partner.avatarUrl} alt={partner.username} className="w-7 h-7 rounded-lg ring-1 ring-white/[0.06]" />
+                {user.image && (
+                  <img src={user.image} alt={user.username || user.name || ""} className="w-7 h-7 rounded-lg ring-1 ring-white/[0.06]" />
                 )}
                 <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-accent-emerald border-2 border-surface" />
               </div>
-              <div>
-                <span className="text-[13px] font-medium text-zinc-200">{partner.username}</span>
-                <span className="text-[11px] text-zinc-600 ml-2">online</span>
-              </div>
+              <span className="text-[13px] font-medium text-zinc-200">{user.username || user.name}</span>
             </div>
           )}
         </div>
