@@ -96,12 +96,12 @@ export default function HostPage() {
                   {session?.user && token ? (
                     <>
                       <div className="relative">
-                        <code className="block text-sm bg-black/40 border border-white/5 rounded-lg px-4 py-2.5 pr-36 text-brand-400 font-mono overflow-x-auto whitespace-nowrap">
+                        <pre className="text-sm bg-black/40 border border-white/5 rounded-lg px-4 py-2.5 pr-4 text-brand-400 font-mono whitespace-pre-wrap break-all">
                           {hostCommand}
-                        </code>
+                        </pre>
                         <button
                           onClick={copyCommand}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs rounded-md border transition-all
+                          className="mt-2 px-3 py-1 text-xs rounded-md border transition-all
                             border-white/10 hover:border-brand-400/50 text-zinc-400 hover:text-brand-400"
                         >
                           {copiedCommand ? "Copied!" : "Copy command"}
@@ -157,8 +157,8 @@ export default function HostPage() {
             <ul className="text-sm text-zinc-300 space-y-1.5">
               <li>Claude Code runs in an isolated temp directory on your machine (not your home folder)</li>
               <li>Your partner sees the same terminal output in their browser in real-time</li>
-              <li>Either of you can type prompts — you both take turns driving Claude</li>
-              <li>Claude Code still asks for your permission before running commands, as always</li>
+              <li>Either of you can type prompts — you take turns driving Claude</li>
+              <li>As the host, you always have the final say — Claude Code asks for your approval before any command runs on your machine</li>
               <li>Sessions last 30 minutes with an optional 15-minute extension</li>
             </ul>
           </div>
