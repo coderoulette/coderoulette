@@ -8,12 +8,10 @@ import { Terminal, type TerminalHandle } from "@/components/Terminal";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { PromptInput } from "@/components/PromptInput";
 import { Timer } from "@/components/Timer";
-import { ProjectSuggestions } from "@/components/ProjectSuggestions";
 import { RoleSwapButton } from "@/components/RoleSwapButton";
 import type {
   ServerEvent,
   ChatMessage,
-  ProjectIdea,
   Role,
 } from "@clauderoulette/shared";
 import { buildWsUrl } from "@/lib/ws";
@@ -31,8 +29,6 @@ export default function QueuePage() {
   const [extended, setExtended] = useState(false);
   const [partner, setPartner] = useState<{ username: string; avatarUrl: string } | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [projects, setProjects] = useState<ProjectIdea[]>([]);
-  const [showProjects, setShowProjects] = useState(false);
   const [projectVotes, setProjectVotes] = useState<Record<string, { up: number; down: number }>>({});
   const [swapRequested, setSwapRequested] = useState(false);
   const [swapRequestedBy, setSwapRequestedBy] = useState<string>();
@@ -106,10 +102,6 @@ export default function QueuePage() {
               break;
             case "chat_message":
               setChatMessages((prev) => [...prev, event.message]);
-              break;
-            case "project_suggestions":
-              setProjects(event.projects);
-              setShowProjects(true);
               break;
             case "project_votes":
               setProjectVotes(event.votes);
@@ -498,15 +490,6 @@ export default function QueuePage() {
 
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden relative">
-        {showProjects && (
-          <ProjectSuggestions
-            projects={projects}
-            votes={projectVotes}
-            onVote={(id, vote) => send({ type: "vote_project", projectId: id, vote })}
-            onDismiss={() => setShowProjects(false)}
-          />
-        )}
-
         {/* Terminal + Prompt */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Pending prompt approvals (shown to host) */}
