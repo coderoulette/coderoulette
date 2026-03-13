@@ -2,12 +2,20 @@
 
 import { useSession, signIn } from "next-auth/react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { useEffect, useCallback, useState, useRef } from "react";
+import { Suspense, useEffect, useCallback, useState, useRef } from "react";
 import { Navbar } from "@/components/Navbar";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import type { ServerEvent } from "@clauderoulette/shared";
 
 export default function InvitePage() {
+  return (
+    <Suspense>
+      <InvitePageInner />
+    </Suspense>
+  );
+}
+
+function InvitePageInner() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();

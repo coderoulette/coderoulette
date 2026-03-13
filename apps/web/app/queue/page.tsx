@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { Suspense, useState, useCallback, useRef, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Terminal, type TerminalHandle } from "@/components/Terminal";
 import { ChatSidebar } from "@/components/ChatSidebar";
@@ -19,6 +19,14 @@ import { buildWsUrl } from "@/lib/ws";
 type PageState = "connecting" | "role_select" | "queued" | "matched" | "session" | "ended";
 
 export default function QueuePage() {
+  return (
+    <Suspense>
+      <QueuePageInner />
+    </Suspense>
+  );
+}
+
+function QueuePageInner() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
