@@ -8,7 +8,6 @@ import { Navbar } from "@/components/Navbar";
 export default function Home() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [devUsername, setDevUsername] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
@@ -121,33 +120,9 @@ export default function Home() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-4">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  signIn("credentials", {
-                    username: devUsername || "dev-user",
-                    callbackUrl: "/",
-                  });
-                }}
-                className="flex items-center gap-2"
-              >
-                <input
-                  type="text"
-                  value={devUsername}
-                  onChange={(e) => setDevUsername(e.target.value)}
-                  placeholder="Pick a username"
-                  className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 text-lg"
-                />
-                <button
-                  type="submit"
-                  className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl text-lg transition-colors"
-                >
-                  Dev Sign In
-                </button>
-              </form>
               <button
                 onClick={() => signIn("github")}
-                className="px-6 py-3 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl transition-colors flex items-center gap-3"
+                className="px-8 py-4 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl text-lg transition-colors flex items-center gap-3"
               >
                 <svg
                   className="w-5 h-5"
