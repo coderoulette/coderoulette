@@ -61,7 +61,7 @@ export default function InvitePage() {
             <p className="text-gray-400">Sign in to join.</p>
             <div className="flex flex-col items-center gap-3">
               <button
-                onClick={() => signIn("github")}
+                onClick={() => signIn("github", { callbackUrl: `/invite/${inviteCode}` })}
                 className="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors"
               >
                 Sign in with GitHub
