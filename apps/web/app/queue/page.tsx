@@ -233,17 +233,21 @@ export default function QueuePage() {
             <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto">
               <span className="text-3xl">!</span>
             </div>
-            <h2 className="text-2xl font-bold text-zinc-100">No host agent available</h2>
+            <h2 className="text-2xl font-bold text-zinc-100">No host agent connected</h2>
             <p className="text-zinc-400">
-              There are no host agents connected right now. To start a session, someone needs
-              to run the host agent on their machine so Claude Code can execute locally.
+              A session needs someone running the host agent so Claude Code can execute locally.
+              Either run it yourself or wait for a partner who has it running.
             </p>
+            <div className="p-3 rounded-lg bg-black/30 border border-white/5 text-left">
+              <p className="text-xs text-zinc-500 mb-1.5">Quick start — run this in your terminal:</p>
+              <code className="text-sm text-brand-400 font-mono">npx coderoulette-host</code>
+            </div>
             <div className="flex flex-col items-center gap-3">
               <a
                 href="/host"
                 className="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-all"
               >
-                Learn how to host
+                Full setup instructions
               </a>
               <button
                 onClick={() => {
@@ -275,9 +279,9 @@ export default function QueuePage() {
         <main className="flex-1 flex items-center justify-center">
           <div className="max-w-lg text-center space-y-8">
             <div className="space-y-3">
-              <h2 className="text-2xl font-bold text-zinc-100">How do you want to play?</h2>
+              <h2 className="text-2xl font-bold text-zinc-100">Choose your role</h2>
               <p className="text-zinc-400 text-sm">
-                The driver controls the terminal. The navigator watches, chats, and suggests prompts.
+                One person hosts Claude Code on their machine. The other joins through the browser.
               </p>
             </div>
 
@@ -293,9 +297,14 @@ export default function QueuePage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-zinc-100">I have Claude Code</h3>
+                    <h3 className="font-semibold text-zinc-100">Host (I have Claude Code)</h3>
                     <p className="text-sm text-zinc-500 mt-1">
-                      You can be the driver. You&apos;ll run the host agent on your machine and control the terminal.
+                      Claude Code runs on your machine. You need the{" "}
+                      <a href="/host" className="text-brand-400 underline underline-offset-2 hover:text-brand-300" onClick={(e) => e.stopPropagation()}>host agent</a>{" "}
+                      running in your terminal before joining.
+                    </p>
+                    <p className="text-xs text-zinc-600 mt-2">
+                      Requires: Node.js 18+, Claude Code installed, host agent running
                     </p>
                   </div>
                 </div>
@@ -313,9 +322,9 @@ export default function QueuePage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-zinc-100">I&apos;ll navigate</h3>
+                    <h3 className="font-semibold text-zinc-100">Navigate (just a browser)</h3>
                     <p className="text-sm text-zinc-500 mt-1">
-                      No install needed. Watch the terminal, chat with your partner, and suggest prompts.
+                      Nothing to install. You see the same terminal as the host, chat, and suggest prompts.
                     </p>
                   </div>
                 </div>

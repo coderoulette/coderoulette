@@ -94,7 +94,7 @@ export default function Home() {
                   onClick={generateInvite}
                   className="px-6 py-3 text-sm text-gray-400 hover:text-gray-200 border border-white/10 hover:border-white/20 rounded-xl transition-colors"
                 >
-                  Play with a friend
+                  Code with a friend
                 </button>
               ) : (
                 <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-raised border border-white/10">
