@@ -73,6 +73,10 @@ function HostPageInner() {
             <ul className="space-y-2 text-sm text-zinc-400">
               <li className="flex items-start gap-2">
                 <span className="text-brand-400 mt-0.5 shrink-0">&#10003;</span>
+                <span><strong className="text-zinc-300">macOS or Linux</strong> — Windows is not currently supported</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand-400 mt-0.5 shrink-0">&#10003;</span>
                 <span><strong className="text-zinc-300">Node.js 18+</strong> — check with <code className="text-xs bg-black/40 px-1.5 py-0.5 rounded text-zinc-300">node --version</code></span>
               </li>
               <li className="flex items-start gap-2">
