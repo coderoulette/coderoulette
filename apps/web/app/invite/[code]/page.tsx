@@ -83,7 +83,7 @@ export default function InvitePage() {
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-zinc-100">You&apos;re invited!</h2>
               <p className="text-zinc-400 text-sm">
-                Choose your role for this session.
+                One person hosts Claude Code on their machine. The other joins through the browser.
               </p>
             </div>
 
@@ -99,9 +99,14 @@ export default function InvitePage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-zinc-100">I have Claude Code</h3>
+                    <h3 className="font-semibold text-zinc-100">Host (I have Claude Code)</h3>
                     <p className="text-sm text-zinc-500 mt-1">
-                      You can be the driver. You&apos;ll run the host agent on your machine and control the terminal.
+                      Claude Code runs on your machine. You need the{" "}
+                      <a href="/host" className="text-brand-400 underline underline-offset-2 hover:text-brand-300" onClick={(e) => e.stopPropagation()}>host agent</a>{" "}
+                      running in your terminal before joining.
+                    </p>
+                    <p className="text-xs text-zinc-600 mt-2">
+                      Requires: Node.js 18+, Claude Code installed, host agent running
                     </p>
                   </div>
                 </div>
@@ -119,9 +124,9 @@ export default function InvitePage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-zinc-100">I&apos;ll navigate</h3>
+                    <h3 className="font-semibold text-zinc-100">Navigate (just a browser)</h3>
                     <p className="text-sm text-zinc-500 mt-1">
-                      No install needed. Watch the terminal, chat with your partner, and suggest prompts.
+                      Nothing to install. You see the same terminal as the host, chat, and suggest prompts.
                     </p>
                   </div>
                 </div>
