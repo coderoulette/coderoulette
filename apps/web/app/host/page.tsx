@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 
 export default function HostPage() {
+  return (
+    <Suspense>
+      <HostPageInner />
+    </Suspense>
+  );
+}
+
+function HostPageInner() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
