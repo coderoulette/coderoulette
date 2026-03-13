@@ -1,0 +1,73 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck server
+        run: npx tsc --noEmit -p apps/server/tsconfig.json
+
+      - name: Build server
+        run: npm run build -w apps/server
+
+      - name: Build web
+        run: npm run build -w apps/web
+        env:
+          NEXTAUTH_SECRET: ci-secret
+          JWT_SECRET: ci-secret
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          rsync -avz --delete \
+            --exclude='node_modules' \
+            --exclude='.next' \
+            --exclude='.git' \
+            --exclude='.env' \
+            --exclude='.env.local' \
+            --exclude='apps/server/.env' \
+            --exclude='apps/web/.env.local' \
+            --exclude='dist' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./ ${USER}@${HOST}:~/projects/coderoulette/
+
+      - name: Install, build, and restart
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key ${USER}@${HOST} "\
+            cd ~/projects/coderoulette && \
+            npm install && \
+            npm run build && \
+            pm2 restart all"
