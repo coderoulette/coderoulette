@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Terminal, type TerminalHandle } from "@/components/Terminal";
@@ -21,6 +21,8 @@ type PageState = "connecting" | "role_select" | "queued" | "matched" | "session"
 export default function QueuePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const autoHost = searchParams.get("host") === "1";
 
   const [pageState, setPageState] = useState<PageState>("connecting");
   const [position, setPosition] = useState(0);
@@ -211,6 +213,15 @@ export default function QueuePage() {
     }
   }, [status, router]);
 
+  // Auto-join as host when returning from /host setup page
+  useEffect(() => {
+    if (autoHost && pageState === "role_select") {
+      setHostEligible(true);
+      setPageState("queued");
+      send({ type: "join_queue", hostEligible: true });
+    }
+  }, [autoHost, pageState, send]);
+
   if (status === "loading") return <div style={{color:"white",padding:20}}>Loading auth...</div>;
 
   const isDriver = role === "driver";
@@ -279,7 +290,7 @@ export default function QueuePage() {
 
             <div className="grid grid-cols-1 gap-4">
               <button
-                onClick={() => joinAs(true)}
+                onClick={() => router.push("/host?return=/queue%3Fhost%3D1")}
                 className="p-5 rounded-xl bg-surface-raised border border-white/5 hover:border-brand-400/40 transition-all text-left group"
               >
                 <div className="flex items-start gap-4">
@@ -291,12 +302,10 @@ export default function QueuePage() {
                   <div>
                     <h3 className="font-semibold text-zinc-100">Host (I have Claude Code)</h3>
                     <p className="text-sm text-zinc-500 mt-1">
-                      Claude Code runs on your machine. You need the{" "}
-                      <a href="/host" className="text-brand-400 underline underline-offset-2 hover:text-brand-300" onClick={(e) => e.stopPropagation()}>host agent</a>{" "}
-                      running in your terminal before joining.
+                      Claude Code runs on your machine. We&apos;ll walk you through the setup first.
                     </p>
                     <p className="text-xs text-zinc-600 mt-2">
-                      Requires: Node.js 18+, Claude Code installed, host agent running
+                      Requires: Node.js 18+, Claude Code installed
                     </p>
                   </div>
                 </div>

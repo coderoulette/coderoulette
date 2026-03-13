@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signIn } from "next-auth/react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useEffect, useCallback, useState, useRef } from "react";
 import { Navbar } from "@/components/Navbar";
 import { useWebSocket } from "@/hooks/useWebSocket";
@@ -11,7 +11,9 @@ export default function InvitePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const inviteCode = params.code as string;
+  const autoHost = searchParams.get("host") === "1";
   const [waiting, setWaiting] = useState(false);
   const [roleChosen, setRoleChosen] = useState(false);
   const hostEligibleRef = useRef(false);
@@ -46,6 +48,13 @@ export default function InvitePage() {
       inviteCode,
     });
   }, [send, inviteCode]);
+
+  // Auto-join as host when returning from /host setup page
+  useEffect(() => {
+    if (autoHost && connected && !roleChosen) {
+      joinAs(true);
+    }
+  }, [autoHost, connected, roleChosen, joinAs]);
 
   if (status === "loading") return null;
 
@@ -89,7 +98,7 @@ export default function InvitePage() {
 
             <div className="grid grid-cols-1 gap-4">
               <button
-                onClick={() => joinAs(true)}
+                onClick={() => router.push(`/host?return=/invite/${inviteCode}%3Fhost%3D1`)}
                 className="p-5 rounded-xl bg-surface-raised border border-white/5 hover:border-brand-400/40 transition-all text-left group"
               >
                 <div className="flex items-start gap-4">
@@ -101,12 +110,10 @@ export default function InvitePage() {
                   <div>
                     <h3 className="font-semibold text-zinc-100">Host (I have Claude Code)</h3>
                     <p className="text-sm text-zinc-500 mt-1">
-                      Claude Code runs on your machine. You need the{" "}
-                      <a href="/host" className="text-brand-400 underline underline-offset-2 hover:text-brand-300" onClick={(e) => e.stopPropagation()}>host agent</a>{" "}
-                      running in your terminal before joining.
+                      Claude Code runs on your machine. We&apos;ll walk you through the setup first.
                     </p>
                     <p className="text-xs text-zinc-600 mt-2">
-                      Requires: Node.js 18+, Claude Code installed, host agent running
+                      Requires: Node.js 18+, Claude Code installed
                     </p>
                   </div>
                 </div>

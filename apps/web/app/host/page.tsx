@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 
 export default function HostPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("return") || "/queue";
   const [token, setToken] = useState<string | null>(null);
   const [copiedCommand, setCopiedCommand] = useState(false);
   const [copiedToken, setCopiedToken] = useState(false);
@@ -144,10 +146,10 @@ export default function HostPage() {
           {/* CTA */}
           <div className="flex justify-center">
             <button
-              onClick={() => router.push("/queue")}
+              onClick={() => router.push(returnTo)}
               className="px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl text-lg transition-colors"
             >
-              Find a partner
+              {returnTo.startsWith("/invite") ? "Join session as host" : "Find a partner"}
             </button>
           </div>
 
