@@ -12,6 +12,7 @@ import {
   broadcastToRoom,
   sendToMember,
 } from "../ws/rooms.js";
+import { addAgent } from "../ws/agent-pool.js";
 
 export function startSession(room: Room): void {
   const now = Date.now();
@@ -51,9 +52,18 @@ export function endSession(
 ): void {
   broadcastToRoom(room, { type: "session_ended", reason });
 
-  // Tell host agent to stop
+  // Tell host agent to stop, then re-pool it under the host user's ID
   if (room.agentWs && room.agentWs.readyState === room.agentWs.OPEN) {
     room.agentWs.send(JSON.stringify({ type: "end_session" }));
+    const agentWs = room.agentWs;
+    const hostUserId = room.host?.userId;
+    // Re-add to pool after a short delay so the agent can clean up its PTY
+    setTimeout(() => {
+      if (agentWs.readyState === agentWs.OPEN && hostUserId) {
+        addAgent(agentWs, hostUserId);
+        agentWs.send(JSON.stringify({ type: "pooled", message: "Waiting for session assignment..." }));
+      }
+    }, 2000);
   }
 
   deleteRoom(room.sessionId);
@@ -100,18 +110,27 @@ export function canRematch(room: Room): boolean {
 export function swapRoles(room: Room): void {
   if (!room.host || !room.guest) return;
 
-  if (room.driverId === room.host.userId) {
-    room.driverId = room.guest.userId;
+  const hostWsId = (room.host.ws as any)._socket?.remotePort || "?";
+  const guestWsId = (room.guest.ws as any)._socket?.remotePort || "?";
+  const oldDriverPort = (room.driverWs as any)?._socket?.remotePort || "?";
+
+  // Swap based on current role, not userId
+  if (room.host.role === "driver") {
     room.host.role = "navigator";
     room.guest.role = "driver";
+    room.driverId = room.guest.userId;
+    room.driverWs = room.guest.ws;
   } else {
-    room.driverId = room.host.userId;
     room.host.role = "driver";
     room.guest.role = "navigator";
+    room.driverId = room.host.userId;
+    room.driverWs = room.host.ws;
   }
 
-  broadcastToRoom(room, {
-    type: "role_swapped",
-    newDriverId: room.driverId,
-  });
+  const newDriverPort = (room.driverWs as any)?._socket?.remotePort || "?";
+  console.log(`[lifecycle] swapRoles: host=${room.host.userId}(port=${hostWsId},role=${room.host.role}) guest=${room.guest.userId}(port=${guestWsId},role=${room.guest.role}) driverWs: port ${oldDriverPort} → ${newDriverPort}`);
+
+  // Send individual events so each user knows their new role
+  sendToMember(room.host, { type: "role_swapped", newRole: room.host.role });
+  sendToMember(room.guest, { type: "role_swapped", newRole: room.guest.role });
 }

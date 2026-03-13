@@ -13,7 +13,7 @@ export function Navbar() {
     <nav className="flex items-center justify-between px-6 py-4 border-b border-white/10">
       <div className="flex items-center gap-2">
         <span className="text-xl font-bold tracking-tight">
-          <span className="text-brand-400">Claude</span>
+          <span className="text-brand-400">Code</span>
           <span className="text-gray-300">Roulette</span>
         </span>
         <span className="text-xs text-gray-500 mt-1">beta</span>

@@ -5,63 +5,101 @@ import type { ClientEvent, ServerEvent } from "@clauderoulette/shared";
 import { buildWsUrl } from "@/lib/ws";
 
 interface UseWebSocketOptions {
-  userId: string;
-  username: string;
-  avatarUrl: string;
+  enabled: boolean;
   onMessage: (event: ServerEvent) => void;
   onOpen?: () => void;
   onClose?: () => void;
 }
 
+const MAX_RECONNECT_DELAY = 30000;
+const BASE_RECONNECT_DELAY = 1000;
+
 export function useWebSocket({
-  userId,
-  username,
-  avatarUrl,
+  enabled,
   onMessage,
   onOpen,
   onClose,
 }: UseWebSocketOptions) {
   const wsRef = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
+  const reconnectAttemptRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intentionalCloseRef = useRef(false);
+
+  const onMessageRef = useRef(onMessage);
+  const onOpenRef = useRef(onOpen);
+  const onCloseRef = useRef(onClose);
+  onMessageRef.current = onMessage;
+  onOpenRef.current = onOpen;
+  onCloseRef.current = onClose;
 
   useEffect(() => {
-    if (!userId) return;
+    if (!enabled) return;
+    intentionalCloseRef.current = false;
 
-    const url = buildWsUrl({ userId, username, avatarUrl });
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      setConnected(true);
-      onOpen?.();
-    };
-
-    ws.onmessage = (e) => {
+    async function connect() {
       try {
-        const event = JSON.parse(e.data) as ServerEvent;
-        onMessage(event);
-      } catch {
-        // Ignore malformed messages
+        const url = await buildWsUrl();
+        const ws = new WebSocket(url);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          setConnected(true);
+          reconnectAttemptRef.current = 0;
+          onOpenRef.current?.();
+        };
+
+        ws.onmessage = (e) => {
+          try {
+            const event = JSON.parse(e.data) as ServerEvent;
+            onMessageRef.current(event);
+          } catch {
+            // Ignore malformed messages
+          }
+        };
+
+        ws.onclose = () => {
+          setConnected(false);
+          onCloseRef.current?.();
+
+          if (!intentionalCloseRef.current) {
+            const delay = Math.min(
+              BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttemptRef.current),
+              MAX_RECONNECT_DELAY
+            );
+            reconnectAttemptRef.current++;
+            reconnectTimerRef.current = setTimeout(connect, delay);
+          }
+        };
+      } catch (err) {
+        console.error("[useWebSocket] Failed to connect:", err);
+        // Retry on token fetch failure
+        if (!intentionalCloseRef.current) {
+          const delay = Math.min(
+            BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttemptRef.current),
+            MAX_RECONNECT_DELAY
+          );
+          reconnectAttemptRef.current++;
+          reconnectTimerRef.current = setTimeout(connect, delay);
+        }
       }
-    };
+    }
 
-    ws.onclose = () => {
-      setConnected(false);
-      onClose?.();
-    };
+    connect();
 
-    // Ping every 15s
     const pingInterval = setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: "ping" }));
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: "ping" }));
       }
     }, 15000);
 
     return () => {
+      intentionalCloseRef.current = true;
       clearInterval(pingInterval);
-      ws.close();
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      wsRef.current?.close();
     };
-  }, [userId, username, avatarUrl]);
+  }, [enabled]);
 
   const send = useCallback((event: ClientEvent) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {

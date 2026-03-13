@@ -3,9 +3,7 @@ import type { AgentCommand } from "@clauderoulette/shared";
 
 export interface WsClientOptions {
   serverUrl: string;
-  userId: string;
-  username: string;
-  avatarUrl: string;
+  token: string;
   sessionId?: string;
   onCommand: (command: AgentCommand) => void;
   onOpen: () => void;
@@ -17,9 +15,7 @@ export function connectToRelay(options: WsClientOptions): {
   close: () => void;
 } {
   const url = new URL(options.serverUrl);
-  url.searchParams.set("userId", options.userId);
-  url.searchParams.set("username", options.username);
-  url.searchParams.set("avatarUrl", options.avatarUrl);
+  url.searchParams.set("token", options.token);
   url.searchParams.set("agent", "true");
   if (options.sessionId) {
     url.searchParams.set("sessionId", options.sessionId);

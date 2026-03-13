@@ -9,12 +9,6 @@ interface ProjectSuggestionsProps {
   onDismiss: () => void;
 }
 
-const EMOJI_MAP: Record<string, string> = {
-  "1": "~",
-  "2": "*",
-  "3": "#",
-};
-
 export function ProjectSuggestions({
   projects,
   votes,

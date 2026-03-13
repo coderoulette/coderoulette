@@ -1,18 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { checkPromptSafety } from "@clauderoulette/shared";
 
 interface PromptInputProps {
   onSubmit: (text: string) => void;
   isDriver: boolean;
   disabled?: boolean;
+  driverInput?: string;
 }
 
-export function PromptInput({ onSubmit, isDriver, disabled }: PromptInputProps) {
+export function PromptInput({ onSubmit, isDriver, disabled, driverInput }: PromptInputProps) {
   const [input, setInput] = useState("");
   const [warnings, setWarnings] = useState<string[]>([]);
   const [showWarning, setShowWarning] = useState(false);
+  const [edited, setEdited] = useState(false);
+  const prevDriverInputRef = useRef("");
+
+  // Sync driver's typing into the navigator's input (until navigator edits it)
+  useEffect(() => {
+    if (driverInput !== undefined && !edited) {
+      setInput(driverInput);
+    }
+    // When driver clears (submitted), reset edited state so next prompt syncs again
+    if (driverInput === "" && prevDriverInputRef.current !== "") {
+      setEdited(false);
+      setInput("");
+    }
+    prevDriverInputRef.current = driverInput ?? "";
+  }, [driverInput, edited]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,26 +44,51 @@ export function PromptInput({ onSubmit, isDriver, disabled }: PromptInputProps) 
 
     onSubmit(text);
     setInput("");
+    setEdited(false);
     setWarnings([]);
     setShowWarning(false);
   }
 
   if (!isDriver) {
+    const hasDriverText = driverInput !== undefined && driverInput.length > 0;
     return (
-      <div className="px-5 py-3.5 bg-surface-raised border-t border-white/[0.04]">
-        <div className="flex items-center gap-2 justify-center">
-          <div className="w-1.5 h-1.5 rounded-full bg-accent-violet" />
-          <p className="text-[13px] text-zinc-500">
-            Navigating — suggest prompts in chat, or{" "}
-            <button className="text-accent-violet hover:text-accent-violet/80 font-medium transition-colors">
-              request to drive
-            </button>
-          </p>
-        </div>
+      <div className="bg-surface border-t border-white/[0.04]">
+        {hasDriverText && !edited && (
+          <div className="px-4 pt-2 flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
+            <span className="text-[11px] text-zinc-500">Driver is typing...</span>
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="p-3 flex gap-2.5 items-end">
+          <div className="flex-1">
+            <textarea
+              value={input}
+              onChange={(e) => { setInput(e.target.value); setEdited(true); }}
+              disabled={disabled}
+              placeholder="Suggest a prompt for the driver..."
+              rows={2}
+              className="w-full px-4 py-3 bg-surface-raised text-[13px] text-zinc-200 placeholder-zinc-600 rounded-xl border border-accent-violet/20 focus:border-accent-violet/40 focus:ring-1 focus:ring-accent-violet/20 focus:outline-none resize-none transition-all font-mono"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={disabled || !input.trim()}
+            className="h-10 px-5 bg-accent-violet hover:bg-accent-violet/80 disabled:bg-zinc-800 disabled:text-zinc-600 text-white text-[13px] font-semibold rounded-xl transition-all"
+          >
+            Suggest
+          </button>
+        </form>
       </div>
     );
   }
 
+  // Driver prompt (used in offline/demo mode only now)
   return (
     <div className="bg-surface border-t border-white/[0.04]">
       {showWarning && warnings.length > 0 && (

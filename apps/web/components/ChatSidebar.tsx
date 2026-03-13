@@ -7,21 +7,26 @@ interface ChatSidebarProps {
   messages: ChatMessage[];
   onSend: (text: string) => void;
   partnerUsername?: string;
+  onPromptClick?: (text: string) => void;
 }
 
 export function ChatSidebar({
   messages,
   onSend,
   partnerUsername,
+  onPromptClick,
 }: ChatSidebarProps) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
-    });
+    const el = scrollRef.current;
+    if (!el) return;
+    // Only auto-scroll if user is near the bottom (within 100px)
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    if (isNearBottom) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    }
   }, [messages.length]);
 
   function handleSubmit(e: React.FormEvent) {
@@ -82,9 +87,19 @@ export function ChatSidebar({
                     })}
                   </span>
                 </div>
-                <p className="text-[13px] text-zinc-400 mt-0.5 leading-relaxed break-words">
-                  {msg.text}
-                </p>
+                {msg.text.startsWith("💡 Prompt suggestion:") && onPromptClick ? (
+                  <button
+                    onClick={() => onPromptClick(msg.text.replace("💡 Prompt suggestion: ", ""))}
+                    className="text-left text-[13px] mt-0.5 leading-relaxed break-words px-2.5 py-1.5 rounded-lg bg-accent-violet/10 border border-accent-violet/20 text-accent-violet hover:bg-accent-violet/20 transition-colors w-full group"
+                  >
+                    <span className="text-[11px] text-accent-violet/60 block mb-0.5">Click to type suggestion</span>
+                    {msg.text.replace("💡 Prompt suggestion: ", "")}
+                  </button>
+                ) : (
+                  <p className="text-[13px] text-zinc-400 mt-0.5 leading-relaxed break-words">
+                    {msg.text}
+                  </p>
+                )}
               </div>
             </div>
           </div>

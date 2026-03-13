@@ -22,15 +22,20 @@ body {
 }
 
 .terminal-container .xterm {
-  padding: 16px 20px;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.terminal-container .xterm-viewport,
+.terminal-container .xterm-screen {
+  padding: 0 !important;
+  width: 100% !important;
+  overflow: hidden !important;
 }
 
 .terminal-container .xterm-viewport {
-  border-radius: 12px;
-}
-
-.terminal-container .xterm-screen {
-  padding: 0;
+  overflow-y: auto !important;
 }
 
 /* ---- Scrollbar ---- */

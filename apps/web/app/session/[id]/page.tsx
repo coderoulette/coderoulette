@@ -26,11 +26,14 @@ export default function SessionPage() {
   const sessionId = params.id as string;
 
   const terminalRef = useRef<TerminalHandle>(null);
+  const terminalBufferRef = useRef<string[]>([]);
 
   const [role, setRole] = useState<Role>("navigator");
+  const [isHost, setIsHost] = useState(false);
   const [endsAt, setEndsAt] = useState<string | null>(null);
   const [extended, setExtended] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [pendingPrompts, setPendingPrompts] = useState<{ id: string; text: string; from: string }[]>([]);
   const [partner, setPartner] = useState<{
     username: string;
     avatarUrl: string;
@@ -51,6 +54,9 @@ export default function SessionPage() {
   const [canRematch, setCanRematch] = useState(true);
   const [sessionStartedAt, setSessionStartedAt] = useState<number>(0);
 
+  // Driver input mirroring for navigator
+  const [driverInput, setDriverInput] = useState("");
+
   const user = session?.user as
     | { id?: string; username?: string; name?: string; image?: string }
     | undefined;
@@ -64,7 +70,11 @@ export default function SessionPage() {
           break;
 
         case "terminal_data":
-          terminalRef.current?.write(event.data);
+          if (terminalRef.current) {
+            terminalRef.current.write(event.data);
+          } else {
+            terminalBufferRef.current.push(event.data);
+          }
           break;
 
         case "chat_message":
@@ -74,6 +84,7 @@ export default function SessionPage() {
         case "matched":
           setPartner(event.partner);
           setRole(event.role);
+          setIsHost(event.isHost && event.hostEligible);
           break;
 
         case "project_suggestions":
@@ -91,11 +102,13 @@ export default function SessionPage() {
           break;
 
         case "role_swapped":
-          setRole(
-            event.newDriverId === user?.id ? "driver" : "navigator"
-          );
+          setRole(event.newRole);
           setSwapRequested(false);
           setSwapRequestedBy(undefined);
+          break;
+
+        case "prompt_approval":
+          setPendingPrompts((prev) => [...prev, { id: event.id, text: event.text, from: event.from }]);
           break;
 
         case "time_warning":
@@ -115,6 +128,17 @@ export default function SessionPage() {
           router.push(`/session-end/${sessionId}?reason=partner_left`);
           break;
 
+        case "driver_input":
+          setDriverInput((prev) => {
+            const d = event.data;
+            if (d === "\r" || d === "\n") return "";
+            if (d === "\x7f" || d === "\b") return prev.slice(0, -1);
+            if (d.startsWith("\x1b")) return prev;
+            if (d.length === 1 && d.charCodeAt(0) < 32) return prev;
+            return prev + d;
+          });
+          break;
+
         case "error":
           // Could show a toast
           console.error("Server error:", event.message);
@@ -125,11 +149,29 @@ export default function SessionPage() {
   );
 
   const { send } = useWebSocket({
-    userId: user?.id || "",
-    username: user?.username || user?.name || "",
-    avatarUrl: user?.image || "",
+    enabled: !!user?.id,
     onMessage,
+    onOpen: () => {
+      send({ type: "join_session", sessionId });
+    },
   });
+
+  // Flush buffered terminal data once terminal mounts
+  const [termMounted, setTermMounted] = useState(false);
+  useEffect(() => {
+    if (terminalRef.current && !termMounted) {
+      setTermMounted(true);
+      if (terminalBufferRef.current.length > 0) {
+        const buf = terminalBufferRef.current;
+        terminalBufferRef.current = [];
+        setTimeout(() => {
+          for (const data of buf) {
+            terminalRef.current?.write(data);
+          }
+        }, 100);
+      }
+    }
+  }, [termMounted]);
 
   // Disable rematch after 3 minutes
   useEffect(() => {
@@ -148,7 +190,7 @@ export default function SessionPage() {
       <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-surface-raised">
         <div className="flex items-center gap-4">
           <span className="text-sm font-bold">
-            <span className="text-brand-400">Claude</span>
+            <span className="text-brand-400">Code</span>
             <span className="text-gray-400">Roulette</span>
           </span>
           {partner && (
@@ -168,12 +210,14 @@ export default function SessionPage() {
         <div className="flex items-center gap-4">
           <RoleSwapButton
             isDriver={isDriver}
+            isHost={isHost}
             swapRequested={swapRequested}
             swapRequestedBy={swapRequestedBy}
             onRequestSwap={() => send({ type: "request_role_swap" })}
             onConfirmSwap={(accepted) =>
               send({ type: "confirm_role_swap", accepted })
             }
+            onReclaimDriver={() => send({ type: "reclaim_driver" })}
           />
           <Timer
             endsAt={endsAt}
@@ -206,12 +250,57 @@ export default function SessionPage() {
         )}
 
         {/* Terminal area */}
-        <div className="flex-1 flex flex-col">
-          <Terminal ref={terminalRef} className="flex-1" />
-          <PromptInput
-            isDriver={isDriver}
-            onSubmit={(text) => send({ type: "prompt", text })}
-          />
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
+          {/* Pending prompt approvals (shown to host) */}
+          {pendingPrompts.length > 0 && (
+            <div className="px-3 pt-2 space-y-2">
+              {pendingPrompts.map((p) => (
+                <div key={p.id} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-accent-violet/10 border border-accent-violet/20 animate-slide-up">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[11px] text-accent-violet/60 block">{p.from} suggests:</span>
+                    <span className="text-[13px] text-accent-violet break-words">{p.text}</span>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        send({ type: "approve_prompt", id: p.id });
+                        setPendingPrompts((prev) => prev.filter((x) => x.id !== p.id));
+                      }}
+                      className="px-3 py-1.5 text-[11px] font-medium bg-accent-emerald/10 text-accent-emerald rounded-md hover:bg-accent-emerald/20 transition-colors"
+                    >
+                      Run
+                    </button>
+                    <button
+                      onClick={() => {
+                        send({ type: "reject_prompt", id: p.id });
+                        setPendingPrompts((prev) => prev.filter((x) => x.id !== p.id));
+                      }}
+                      className="px-3 py-1.5 text-[11px] font-medium bg-surface-overlay text-zinc-500 rounded-md hover:bg-zinc-700 hover:text-zinc-300 transition-colors"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className={`flex-1 p-3 ${isDriver ? "" : "pb-0"} min-h-0`}>
+            <Terminal
+              ref={terminalRef}
+              className="h-full rounded-xl border border-white/[0.04]"
+              onResize={(cols, rows) => send({ type: "resize", cols, rows })}
+              onInput={(data) => {
+                send({ type: "terminal_input", data });
+              }}
+            />
+          </div>
+          {!isDriver && (
+            <PromptInput
+              isDriver={false}
+              driverInput={driverInput}
+              onSubmit={(text) => send({ type: "suggest_prompt", text })}
+            />
+          )}
         </div>
 
         {/* Chat sidebar */}

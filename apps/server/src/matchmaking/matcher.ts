@@ -8,7 +8,7 @@ import {
   getInviteWaiter,
   removeInviteWaiter,
 } from "./queue.js";
-import { createRoom, type RoomMember } from "../ws/rooms.js";
+import { createRoom, indexUserToRoom, type RoomMember } from "../ws/rooms.js";
 import { assignAgentToRoom } from "../ws/handler.js";
 
 export interface MatchResult {
@@ -44,6 +44,7 @@ function notifyMatch(
     },
     role: "driver" as Role,
     isHost: true,
+    hostEligible: host.hostEligible,
   };
 
   const guestEvent: ServerEvent = {
@@ -56,6 +57,7 @@ function notifyMatch(
     },
     role: "navigator" as Role,
     isHost: false,
+    hostEligible: guest.hostEligible,
   };
 
   const suggestionsEvent: ServerEvent = {
@@ -84,6 +86,8 @@ export function tryMatch(): MatchResult | null {
   // Create the room
   const room = createRoom(sessionId);
   room.driverId = host.userId;
+  room.driverWs = host.ws;
+  room.hostWs = host.ws;
 
   const hostMember: RoomMember = {
     ws: host.ws,
@@ -93,6 +97,7 @@ export function tryMatch(): MatchResult | null {
     githubId: 0,
     role: "driver",
     isHost: true,
+    hostEligible: host.hostEligible,
   };
 
   const guestMember: RoomMember = {
@@ -103,15 +108,31 @@ export function tryMatch(): MatchResult | null {
     githubId: 0,
     role: "navigator",
     isHost: false,
+    hostEligible: guest.hostEligible,
   };
 
   room.host = hostMember;
   room.guest = guestMember;
+  indexUserToRoom(host.userId, sessionId);
+  indexUserToRoom(guest.userId, sessionId);
 
   notifyMatch(host, guest, sessionId);
 
   // Try to assign a pooled agent
-  assignAgentToRoom(sessionId);
+  // Assign the host user's agent to this room
+  const assigned = assignAgentToRoom(sessionId, host.userId);
+  if (!assigned) {
+    const noAgentError = JSON.stringify({
+      type: "error",
+      message: "Host agent not connected. The host needs to run the agent on their machine.",
+    });
+    if (host.ws.readyState === host.ws.OPEN) {
+      host.ws.send(noAgentError);
+    }
+    if (guest.ws.readyState === guest.ws.OPEN) {
+      guest.ws.send(noAgentError);
+    }
+  }
 
   return { sessionId, host, guest };
 }
@@ -129,6 +150,8 @@ export function tryInviteMatch(
 
   const room = createRoom(sessionId);
   room.driverId = host.userId;
+  room.driverWs = host.ws;
+  room.hostWs = host.ws;
 
   room.host = {
     ws: host.ws,
@@ -138,6 +161,7 @@ export function tryInviteMatch(
     githubId: 0,
     role: "driver",
     isHost: true,
+    hostEligible: host.hostEligible,
   };
 
   room.guest = {
@@ -148,11 +172,28 @@ export function tryInviteMatch(
     githubId: 0,
     role: "navigator",
     isHost: false,
+    hostEligible: guest.hostEligible,
   };
+
+  indexUserToRoom(host.userId, sessionId);
+  indexUserToRoom(guest.userId, sessionId);
 
   notifyMatch(host, guest, sessionId);
 
-  assignAgentToRoom(sessionId);
+  // Assign the host user's agent to this room
+  const assigned = assignAgentToRoom(sessionId, host.userId);
+  if (!assigned) {
+    const noAgentError = JSON.stringify({
+      type: "error",
+      message: "Host agent not connected. The host needs to run the agent on their machine.",
+    });
+    if (host.ws.readyState === host.ws.OPEN) {
+      host.ws.send(noAgentError);
+    }
+    if (guest.ws.readyState === guest.ws.OPEN) {
+      guest.ws.send(noAgentError);
+    }
+  }
 
   return { sessionId, host, guest };
 }

@@ -6,33 +6,52 @@ interface PooledAgent {
   connectedAt: number;
 }
 
-const pool: PooledAgent[] = [];
+/** Agents indexed by userId — each user has their own agent */
+const agentsByUser = new Map<string, PooledAgent>();
 
 export function addAgent(ws: WebSocket, userId: string): void {
-  pool.push({ ws, userId, connectedAt: Date.now() });
-  console.log(`[agent-pool] Agent added (pool size: ${pool.length})`);
+  agentsByUser.set(userId, { ws, userId, connectedAt: Date.now() });
+  console.log(`[agent-pool] Agent added for user=${userId} (pool size: ${agentsByUser.size})`);
 }
 
 export function removeAgent(ws: WebSocket): void {
-  const idx = pool.findIndex((a) => a.ws === ws);
-  if (idx !== -1) {
-    pool.splice(idx, 1);
-    console.log(`[agent-pool] Agent removed (pool size: ${pool.length})`);
+  for (const [userId, agent] of agentsByUser) {
+    if (agent.ws === ws) {
+      agentsByUser.delete(userId);
+      console.log(`[agent-pool] Agent removed for user=${userId} (pool size: ${agentsByUser.size})`);
+      return;
+    }
   }
 }
 
-export function claimAgent(): PooledAgent | null {
-  // Find first agent with an open connection
-  while (pool.length > 0) {
-    const agent = pool.shift()!;
-    if (agent.ws.readyState === agent.ws.OPEN) {
-      console.log(`[agent-pool] Agent claimed (pool size: ${pool.length})`);
-      return agent;
-    }
+export function removeAgentByUserId(userId: string): void {
+  if (agentsByUser.delete(userId)) {
+    console.log(`[agent-pool] Agent removed for user=${userId} (pool size: ${agentsByUser.size})`);
   }
+}
+
+/** Claim a specific user's agent. Returns null if they don't have one connected. */
+export function claimAgentForUser(userId: string): PooledAgent | null {
+  const agent = agentsByUser.get(userId);
+  if (agent && agent.ws.readyState === agent.ws.OPEN) {
+    agentsByUser.delete(userId);
+    console.log(`[agent-pool] Agent claimed for user=${userId} (pool size: ${agentsByUser.size})`);
+    return agent;
+  }
+  // Clean up stale entry
+  if (agent) agentsByUser.delete(userId);
   return null;
 }
 
+/** Check if a user has an agent connected and ready */
+export function hasAgent(userId: string): boolean {
+  const agent = agentsByUser.get(userId);
+  if (agent && agent.ws.readyState === agent.ws.OPEN) return true;
+  // Clean up stale entry
+  if (agent) agentsByUser.delete(userId);
+  return false;
+}
+
 export function poolSize(): number {
-  return pool.length;
+  return agentsByUser.size;
 }

@@ -1,24 +1,10 @@
 #!/bin/bash
-# claude-init.sh — ClaudeRoulette project setup
+# claude-init.sh — CodeRoulette local development setup
 # Run from the project root: bash claude-init.sh
-#
-# This handles project-specific setup only.
-# For global Claude configs (agents, hooks, docs), run claude-global-init.sh first.
 set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-echo "Setting up ClaudeRoulette project in: $PROJECT_DIR"
-
-# Check global configs
-if [ ! -f "$HOME/.claude/settings.json" ]; then
-    echo ""
-    echo "Global Claude configs not found. Running claude-global-init.sh first..."
-    if [ -f "$PROJECT_DIR/claude-global-init.sh" ]; then
-        bash "$PROJECT_DIR/claude-global-init.sh"
-    else
-        echo "Warning: claude-global-init.sh not found. Run it manually for agents/hooks/docs."
-    fi
-fi
+echo "Setting up CodeRoulette in: $PROJECT_DIR"
 
 # Environment files
 mkdir -p "$PROJECT_DIR/apps/web" "$PROJECT_DIR/apps/server"
@@ -50,9 +36,10 @@ echo "apps/server/.env exists, skipping"
 fi
 
 echo ""
-echo "ClaudeRoulette setup complete!"
+echo "CodeRoulette setup complete!"
 echo ""
 echo "Next steps:"
 echo "  1. npm install"
-echo "  2. npm run demo    # starts server + web + host agent"
-echo "  3. Open http://localhost:3000/dev"
+echo "  2. Edit .env files with your GitHub OAuth credentials"
+echo "  3. npm run dev     # starts server + web app"
+echo "  4. npm run demo    # starts server + web + host agent"

@@ -1,10 +1,11 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 
-export default function SessionEndPage() {
+function SessionEndContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reason = searchParams.get("reason") || "timer";
@@ -51,5 +52,13 @@ export default function SessionEndPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SessionEndPage() {
+  return (
+    <Suspense fallback={<div style={{ color: "white", padding: 20 }}>Loading...</div>}>
+      <SessionEndContent />
+    </Suspense>
   );
 }

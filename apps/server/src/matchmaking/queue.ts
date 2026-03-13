@@ -9,6 +9,11 @@ const queue: QueueItem[] = [];
 const inviteQueues = new Map<string, QueueItem>();
 
 export function enqueue(item: QueueItem): number {
+  // Prevent duplicate entries for the same user
+  if (queue.some((q) => q.userId === item.userId)) {
+    return queue.findIndex((q) => q.userId === item.userId) + 1;
+  }
+
   // Handle invite codes — private 2-person queues
   if (item.inviteCode) {
     const waiting = inviteQueues.get(item.inviteCode);

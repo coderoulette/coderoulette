@@ -8,6 +8,16 @@ dist/
 apps/server/.env
 apps/web/.env.local
 
-# Claude sessions (local state)
+# Claude Code local state
 .claude/sessions/
 .claude/settings.local.json
+
+# Personal Claude configs (not project-specific)
+.claude/agents/
+.claude/docs/
+.claude/hooks/
+.claude/skills/
+
+# OS files
+.DS_Store
+Thumbs.db

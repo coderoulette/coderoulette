@@ -10,19 +10,21 @@ export interface PtySession {
   buffer: OutputBuffer;
 }
 
-export function spawnClaudeCode(workDir: string): PtySession {
+export function spawnClaudeCode(workDir: string, cols = 120, rows = 40): PtySession {
   const buffer = new OutputBuffer();
   const dataCallbacks: ((data: Buffer) => void)[] = [];
   const exitCallbacks: ((code: number) => void)[] = [];
 
-  // Spawn Claude Code in the working directory without auto-approve
+  // Spawn Claude Code in the working directory
   const proc = pty.spawn("claude", [], {
     name: "xterm-256color",
-    cols: 120,
-    rows: 40,
+    cols,
+    rows,
     cwd: workDir,
     env: {
-      ...process.env,
+      ...Object.fromEntries(
+        Object.entries(process.env).filter(([k]) => k !== "CLAUDECODE")
+      ),
       TERM: "xterm-256color",
     },
   });

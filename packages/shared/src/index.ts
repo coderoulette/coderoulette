@@ -62,7 +62,14 @@ export type ClientEvent =
   | { type: "request_extend" }
   | { type: "confirm_extend"; accepted: boolean }
   | { type: "checkin_response"; continueSession: boolean }
+  | { type: "suggest_prompt"; text: string }
+  | { type: "approve_prompt"; id: string }
+  | { type: "reject_prompt"; id: string }
+  | { type: "reclaim_driver" }
   | { type: "solo_session" }
+  | { type: "join_session"; sessionId: string }
+  | { type: "resize"; cols: number; rows: number }
+  | { type: "terminal_input"; data: string }
   | { type: "ping" };
 
 // Server -> Client
@@ -75,12 +82,14 @@ export type ServerEvent =
       partner: { username: string; avatarUrl: string; githubId: number };
       role: Role;
       isHost: boolean;
+      hostEligible: boolean;
     }
   | { type: "session_started"; endsAt: string }
   | { type: "terminal_data"; data: string }
   | { type: "chat_message"; message: ChatMessage }
   | { type: "role_swap_requested"; by: string }
-  | { type: "role_swapped"; newDriverId: string }
+  | { type: "role_swapped"; newRole: Role }
+  | { type: "prompt_approval"; id: string; text: string; from: string }
   | { type: "time_warning"; remainingMs: number }
   | { type: "checkin"; message: string }
   | { type: "extend_requested"; by: string }
@@ -96,6 +105,7 @@ export type ServerEvent =
       type: "project_votes";
       votes: Record<string, { up: number; down: number }>;
     }
+  | { type: "driver_input"; data: string }
   | { type: "error"; message: string }
   | { type: "pong" };
 
@@ -109,6 +119,8 @@ export type AgentEvent =
 export type AgentCommand =
   | { type: "start_session"; sessionId: string; workDir?: string }
   | { type: "send_prompt"; text: string }
+  | { type: "resize"; cols: number; rows: number }
+  | { type: "terminal_input"; data: string }
   | { type: "end_session" };
 
 export interface ProjectIdea {
@@ -318,6 +330,11 @@ export const PROJECT_IDEAS: ProjectIdea[] = [
 ];
 
 export function getRandomProjects(count = 3): ProjectIdea[] {
-  const shuffled = [...PROJECT_IDEAS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  const arr = [...PROJECT_IDEAS];
+  // Fisher-Yates shuffle
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr.slice(0, count);
 }

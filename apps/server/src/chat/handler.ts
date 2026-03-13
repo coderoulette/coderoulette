@@ -1,6 +1,6 @@
 import { v4 as uuid } from "uuid";
 import type { ChatMessage, ServerEvent } from "@clauderoulette/shared";
-import { type Room, sendToMember } from "../ws/rooms.js";
+import { type Room, broadcastToRoom } from "../ws/rooms.js";
 
 export function handleChatMessage(
   room: Room,
@@ -10,10 +10,6 @@ export function handleChatMessage(
   const sender =
     room.host?.userId === senderId ? room.host : room.guest;
   if (!sender) return;
-
-  const other =
-    room.host?.userId === senderId ? room.guest : room.host;
-  if (!other) return;
 
   const message: ChatMessage = {
     id: uuid(),
@@ -25,6 +21,6 @@ export function handleChatMessage(
     timestamp: new Date().toISOString(),
   };
 
-  // Send to the other person (sender already has it locally)
-  sendToMember(other, { type: "chat_message", message });
+  // Broadcast to both users (client does not add messages locally)
+  broadcastToRoom(room, { type: "chat_message", message });
 }
