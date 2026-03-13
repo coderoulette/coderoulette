@@ -11,13 +11,14 @@ export function Navbar() {
 
   return (
     <nav className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-      <div className="flex items-center gap-2">
+      <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <img src="/logo.svg" alt="CodeRoulette" className="w-6 h-6" />
         <span className="text-xl font-bold tracking-tight">
           <span className="text-brand-400">Code</span>
           <span className="text-gray-300">Roulette</span>
         </span>
         <span className="text-xs text-gray-500 mt-1">beta</span>
-      </div>
+      </a>
 
       <div className="flex items-center gap-4">
         {user ? (

@@ -444,11 +444,9 @@ function QueuePageInner() {
       {/* Session top bar */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.04] bg-surface z-20">
         <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-brand-500 flex items-center justify-center">
-              <span className="text-white font-bold text-[10px]">CR</span>
-            </div>
-          </div>
+          <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img src="/logo.svg" alt="CodeRoulette" className="w-6 h-6" />
+          </a>
           <div className="w-[1px] h-5 bg-white/[0.06]" />
           {user && (
             <div className="flex items-center gap-2.5">
